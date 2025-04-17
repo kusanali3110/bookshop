@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: .
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - BOOK_SERVICE_URL=http://book-service:8002
+      - CART_SERVICE_URL=http://cart-service:8003
+    networks:
+      - bookshop-network
+    depends_on:
+      - auth-service
+      - book-service
+      - cart-service
+
+networks:
+  bookshop-network:
+    external: true 

@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  api-gateway:
+    build: 
+      context: ./api_gateway
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - BOOK_SERVICE_URL=http://book-service:8002
+      - CART_SERVICE_URL=http://cart-service:8003
+    depends_on:
+      - auth-service
+      - book-service
+      - cart-service
+    networks:
+      - bookshop-network
+
+  # Auth Service
+  auth-service:
+    build: 
+      context: ./auth_service
+    container_name: auth-service
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017/bookshop
+      - JWT_SECRET_KEY=your_jwt_secret_key_here
+      - JWT_ALGORITHM=HS256
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP_PORT=587
+      - SENDER_EMAIL=your_email@gmail.com
+      - SENDER_PASSWORD=your_app_password
+    depends_on:
+      - mongodb
+    networks:
+      - bookshop-network
+
+  # Book Service
+  book-service:
+    build: 
+      context: ./book_service
+    container_name: book-service
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - MONGODB_URI=mongodb://mongodb:27017/bookshop
+      - NODE_ENV=development
+    volumes:
+      - ./book_service/uploads:/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - bookshop-network
+
+  # Cart Service
+  cart-service:
+    build: 
+      context: ./cart_service
+    container_name: cart-service
+    ports:
+      - "8003:8003"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/bookshop
+      - BOOK_SERVICE_URL=http://book-service:8002
+      - AUTH_SERVICE_URL=http://auth-service:8001
+    depends_on:
+      - mongodb
+      - book-service
+      - auth-service
+    networks:
+      - bookshop-network
+
+  # MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bookshop-network
+
+networks:
+  bookshop-network:
+    driver: bridge
+
+volumes:
+  mongodb_data: 

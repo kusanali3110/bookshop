@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: .
+    container_name: auth-service
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017/bookshop
+      - JWT_SECRET_KEY=your-secret-key-here
+      - JWT_ALGORITHM=HS256
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP_PORT=587
+      - SENDER_EMAIL=example@gmail.com
+      - SENDER_PASSWORD=your-app-password
+    depends_on:
+      - mongodb
+    networks:
+      - bookshop-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bookshop-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  bookshop-network:
+    external: true 

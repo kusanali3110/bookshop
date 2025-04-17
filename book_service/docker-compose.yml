@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  book-service:
+    build: .
+    container_name: book-service
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - MONGODB_URI=mongodb://mongodb:27017/bookshop
+      - NODE_ENV=development
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - bookshop-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bookshop-network
+
+networks:
+  bookshop-network:
+    driver: bridge
+
+volumes:
+  mongodb_data: 

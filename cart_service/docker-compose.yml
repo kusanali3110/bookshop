@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  cart-service:
+    build: .
+    container_name: cart-service
+    ports:
+      - "8003:8003"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB=bookshop
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - BOOK_SERVICE_URL=http://book-service:8002
+      - PORT=8003
+    depends_on:
+      - mongodb
+    networks:
+      - bookshop-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - bookshop-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  bookshop-network:
+    external: true 
