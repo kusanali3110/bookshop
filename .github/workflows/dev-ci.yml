@@ -1,0 +1,61 @@
+name: CI for Dev Branch
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-push-dev-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Detect changed services (in dev)
+        id: detect
+        run: |
+          changed=$(git diff --name-only HEAD~1 HEAD | cut -d/ -f1 | sort -u)
+          echo "Changed services: $changed"
+          echo "changed_services=$changed" >> $GITHUB_OUTPUT
+
+      - name: Build, tag and push Docker images
+        if: steps.detect.outputs.changed_services != ''
+        run: |
+          NOW=$(date +"%d%m%Y-%H-%M-%S")
+
+          for service in ${{ steps.detect.outputs.changed_services }}; do
+            if [ -f "$service/Dockerfile" ] && [ -f "$service/VERSION" ]; then
+              echo "🔧 Building $service..."
+
+              version=$(cat $service/VERSION)
+              IFS='.' read -r major minor patch <<< "$version"
+              new_patch=$((patch + 1))
+              new_version="v$major.$minor.$new_patch+$NOW"
+
+              echo "📦 New version for $service: $new_version"
+
+              # Update VERSION file
+              echo "v$major.$minor.$new_patch" > $service/VERSION
+
+              # Commit version bump
+              git config user.name "github-actions"
+              git config user.email "github-actions@github.com"
+              git add $service/VERSION
+              git commit -m "ci($service): bump version to v$major.$minor.$new_patch"
+              git push origin dev
+
+              # Build & push image
+              docker build -t ${{ secrets.DOCKER_USERNAME }}/bookshop-$service:$new_version ./$service
+              docker push ${{ secrets.DOCKER_USERNAME }}/bookshop-$service:$new_version
+            else
+              echo "⚠️ Skipping $service: missing Dockerfile or VERSION"
+            fi
+          done
