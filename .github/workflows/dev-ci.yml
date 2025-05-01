@@ -22,7 +22,11 @@ jobs:
       - name: Detect changed services (in dev)
         id: detect
         run: |
-          changed=$(git diff --name-only HEAD~1 HEAD | cut -d/ -f1 | sort -u)
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            changed=$(git diff --name-only HEAD~1 HEAD | cut -d/ -f1 | sort -u)
+          else
+            changed=$(git diff-tree --no-commit-id --name-only -r HEAD | cut -d/ -f1 | sort -u)
+          fi
           echo "Changed services: $changed"
           echo "changed_services=$changed" >> $GITHUB_OUTPUT
 
@@ -35,26 +39,29 @@ jobs:
             if [ -f "$service/Dockerfile" ] && [ -f "$service/VERSION" ]; then
               echo "🔧 Building $service..."
 
-              version=$(cat $service/VERSION)
-              IFS='.' read -r major minor patch <<< "$version"
+              # Đọc phiên bản cũ và tăng patch
+              version_line=$(cat $service/VERSION)
+              version_clean=$(echo "$version_line" | sed 's/^v//' | cut -d- -f1)  # bỏ "v" và timestamp
+              IFS='.' read -r major minor patch <<< "$version_clean"
               new_patch=$((patch + 1))
-              new_version="v$major.$minor.$new_patch+$NOW"
+              new_version="$major.$minor.$new_patch"
+              image_tag="v$new_version-$NOW"
 
-              echo "📦 New version for $service: $new_version"
+              echo "📦 New image tag for $service: $image_tag"
 
-              # Update VERSION file
-              echo "v$major.$minor.$new_patch" > $service/VERSION
+              # Ghi lại image tag vào file VERSION
+              echo "$image_tag" > $service/VERSION
 
-              # Commit version bump
+              # Commit VERSION mới
               git config user.name "github-actions"
               git config user.email "github-actions@github.com"
               git add $service/VERSION
-              git commit -m "ci($service): bump version to v$major.$minor.$new_patch"
+              git commit -m "ci($service): bump version to $image_tag"
               git push origin dev
 
               # Build & push image
-              docker build -t ${{ secrets.DOCKER_USERNAME }}/bookshop-$service:$new_version ./$service
-              docker push ${{ secrets.DOCKER_USERNAME }}/bookshop-$service:$new_version
+              docker build -t ${{ secrets.DOCKER_USERNAME }}/bookshop-$service:$image_tag ./$service
+              docker push ${{ secrets.DOCKER_USERNAME }}/bookshop-$service:$image_tag
             else
               echo "⚠️ Skipping $service: missing Dockerfile or VERSION"
             fi
