@@ -47,7 +47,7 @@ uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 
 ## Docker
 
-Adjust environment variables in docker-compose.yml file.
+Adjust environment variables in docker-compose.yml file
 Build and run the service using Docker:
 
 ```bash
