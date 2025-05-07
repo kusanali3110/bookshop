@@ -28,12 +28,13 @@ services:
       - "8001:8001"
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/bookshop
-      - JWT_SECRET_KEY=your_jwt_secret_key_here
+      - BASE_URL=http://2hbookshopproject.site
+      - jwtSecretKey=your_jwt_secret_key_here
       - JWT_ALGORITHM=HS256
-      - SMTP_SERVER=smtp.gmail.com
-      - SMTP_PORT=587
-      - SENDER_EMAIL=your_email@gmail.com
-      - SENDER_PASSWORD=your_app_password
+      - smtpServer=smtp.gmail.com
+      - smtpPort=587
+      - senderEmail=your_email@gmail.com
+      - senderPassword=your_app_password
     depends_on:
       - mongodb
     networks:

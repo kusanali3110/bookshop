@@ -14,12 +14,13 @@ logger = logging.getLogger(__name__)
 # ===== EMAIL CONFIGURATION =====
 
 # Get email configuration from environment variables
-MAIL_USERNAME = os.getenv("SENDER_EMAIL")
-MAIL_PASSWORD = os.getenv("SENDER_PASSWORD")
-MAIL_FROM = os.getenv("SENDER_EMAIL")
-MAIL_PORT = int(os.getenv("SMTP_PORT", "587"))
-MAIL_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "Bookshop Auth Service")
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+MAIL_USERNAME = os.getenv("senderEmail")
+MAIL_PASSWORD = os.getenv("senderPassword")
+MAIL_FROM = os.getenv("senderEmail")
+MAIL_PORT = int(os.getenv("smtpPort", "587"))
+MAIL_SERVER = os.getenv("smtpServer", "smtp.gmail.com")
+MAIL_FROM_NAME = "Bookshop Auth Service"
 MAIL_STARTTLS = os.getenv("MAIL_STARTTLS", "True").lower() == "true"
 MAIL_SSL_TLS = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
 
@@ -45,7 +46,7 @@ def get_verification_email_template(token: str) -> str:
         <body>
             <h1>Verify Your Email</h1>
             <p>Please click the link below to verify your email address:</p>
-            <a href="http://localhost:8000/auth/verify-email?token={token}">
+            <a href="{BASE_URL}/auth/verify-email?token={token}">
                 Verify Email
             </a>
             <p>If you did not request this verification, please ignore this email.</p>
@@ -60,7 +61,7 @@ def get_password_reset_template(token: str) -> str:
         <body>
             <h1>Reset Your Password</h1>
             <p>Please click the link below to reset your password:</p>
-            <a href="http://localhost:8000/auth/reset-password?token={token}">
+            <a href="{BASE_URL}/auth/reset-password?token={token}">
                 Reset Password
             </a>
             <p>If you did not request this password reset, please ignore this email.</p>
@@ -143,7 +144,7 @@ class EmailService:
             # This allows the application to continue even if email fails
 
     async def send_verification_email(self, recipient: str, token: str, user_id: str) -> None:
-        verification_url = f"http://localhost:8000/auth/verify-email?user_id={user_id}&token={token}"
+        verification_url = f"{BASE_URL}/auth/verify-email?user_id={user_id}&token={token}"
         subject = "Verify Your Email"
         body = f"""
         <html>
@@ -159,7 +160,7 @@ class EmailService:
         await self._send_email(recipient, subject, body)
 
     async def send_password_reset_email(self, recipient: str, token: str) -> None:
-        reset_url = f"http://localhost:8000/auth/reset-password?token={token}"
+        reset_url = f"{BASE_URL}/auth/reset-password?token={token}"
         subject = "Password Reset Request"
         body = f"""
         <html>
