@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - dev
+  
+permissions:
+  contents: write
 
 jobs:
   build-push-dev-images:
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, 'ci(')
     runs-on: ubuntu-latest
 
     steps:
