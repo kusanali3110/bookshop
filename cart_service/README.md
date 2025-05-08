@@ -7,7 +7,7 @@ The Cart Service is a microservice responsible for managing shopping carts in th
 - User authentication via JWT tokens
 - Cart management (create, read, update, delete)
 - Integration with Book Service for product information
-- MongoDB for data persistence
+- MongoDB for data persistence.
 
 ## API Endpoints
 

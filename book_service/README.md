@@ -9,7 +9,7 @@ Book management and inventory service for the BookShop application.
 - Category management
 - Inventory tracking
 - Image upload and management
-- Tag management
+- Tag management.
 
 ## API Endpoints
 
