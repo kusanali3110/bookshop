@@ -16,10 +16,22 @@ SERVICES = {
     "cart": os.getenv("CART_SERVICE_URL", "http://cart-service:8003")
 }
 
-@router.api_route("/{service}/{path:path}", methods=["GET", "POST", "PATCH", "PUT", "DELETE"])
+@router.api_route("/{service}/{path:path}", methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"])
 async def proxy_request(service: str, path: str, request: Request):
     if service not in SERVICES:
         raise HTTPException(status_code=400, detail="Invalid service")
+
+    # Handle OPTIONS request
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "3600",
+            }
+        )
 
     url = f"{SERVICES[service]}/{path}"
     headers = dict(request.headers)
