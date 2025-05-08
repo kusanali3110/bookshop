@@ -16,7 +16,6 @@ SERVICES = {
     "cart": os.getenv("CART_SERVICE_URL", "http://cart-service:8003")
 }
 
-
 @router.api_route("/{service}/{path:path}", methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"])
 async def proxy_request(service: str, path: str, request: Request):
     if service not in SERVICES:
