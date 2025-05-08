@@ -36,7 +36,7 @@ jobs:
       
           services=()
           for path in $changed_paths; do
-            dir="${path%%/*}"  # Lấy thư mục gốc
+            dir="${path%%/*}"
             if [ -d "$dir" ] && [ -f "$dir/Dockerfile" ] && [ -f "$dir/VERSION" ]; then
               services+=("$dir")
             fi
