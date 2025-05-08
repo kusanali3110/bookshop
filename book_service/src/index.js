@@ -19,6 +19,7 @@ app.use(cors({
     exposedHeaders: '*',
     maxAge: 3600
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
