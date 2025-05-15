@@ -2,6 +2,7 @@ import React from 'react'
 import { useShop } from '../context/ShopContext'
 import CartItems from '../components/CartItems'
 import CartTotal from '../components/CartTotal'
+import { API_URLS } from '../config/api'
 
 const Cart = () => {
   const { cartItems } = useShop();
