@@ -33,6 +33,7 @@ jobs:
             [auth_service]="authService"
             [book_service]="bookService"
             [cart_service]="cartService"
+            [frontend]="frontend"
           )
 
           # Bước 1: Đọc tag từ file VERSION trong main-repo
