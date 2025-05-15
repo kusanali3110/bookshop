@@ -8,7 +8,7 @@ export const API_URLS = {
     VERIFY_EMAIL: `${BACKEND_URL}/auth/verify-email`,
   },
   BOOK: {
-    LIST: `${BACKEND_URL}/book`,
+    LIST: `${BACKEND_URL}/book/`,
     DETAIL: (id) => `${BACKEND_URL}/book/${id}`,
     UPLOAD_IMAGE: `${BACKEND_URL}/book/upload-image`,
   },
