@@ -23,30 +23,35 @@ jobs:
           ref: main
           path: config-repo
 
-      - name: Update values.yaml with new image tags
+      - name: Read and update image tags
         run: |
-          # Đọc tag từ từng file VERSION trong main-repo
+          # Bước 1: Đọc các tag từ file VERSION
           cd main-repo
-          declare -A tags
+          > ../tags.env  # tạo file chứa các biến môi trường
+
           for dir in */; do
             service="${dir%/}"
             if [ -f "$service/VERSION" ]; then
               tag=$(cat "$service/VERSION")
-              tags["$service"]=$tag
+              echo "$service=$tag" >> ../tags.env
             fi
           done
 
-          # Cập nhật values.yaml trong config-repo
+          # Bước 2: Cập nhật values.yaml trong repo cấu hình
           cd ../config-repo
           values_file="kubernetes/bookshop/values.yaml"
 
+          # Load các biến tag từ file tags.env
+          source ../tags.env
+
+          # Hàm cập nhật từng dòng image tag
           update_tag() {
             service=$1
             key=$2
-            tag="${tags[$service]}"
-            if [ -n "$tag" ]; then
-              echo "🛠 Updating $service image to $tag"
-              sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag|" "$values_file"
+            tag_var="${!service}"
+            if [ -n "$tag_var" ]; then
+              echo "🛠 Updating $service image to $tag_var"
+              sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag_var|" "$values_file"
             else
               echo "⚠️  No tag found for $service"
             fi
@@ -57,11 +62,6 @@ jobs:
           update_tag bookService bookService.image
           update_tag cartService cartService.image
 
-      - name: Show diff for debugging
-        run: |
-          cd config-repo
-          git diff kubernetes/bookshop/values.yaml || echo "No differences found"
-
       - name: Commit and push updated values.yaml
         run: |
           cd config-repo
@@ -69,7 +69,7 @@ jobs:
           git config user.email "github-actions@github.com"
 
           if git diff --quiet kubernetes/bookshop/values.yaml; then
-            echo "✅ No changes to commit"
+            echo "✅ No changes in values.yaml, skipping commit."
           else
             git add kubernetes/bookshop/values.yaml
             git commit -m "chore: update image tags from main branch"
