@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { API_URLS } from '../config/api'
 
 const ProductItem = ({ id, image, name, price, author }) => {
   const [imageError, setImageError] = useState(false);

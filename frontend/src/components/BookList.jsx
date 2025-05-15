@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ProductItem from './ProductItem';
-
-const API_URL = 'http://localhost:8000/book/';
+import { API_URLS } from '../config/api';
 
 const BookList = () => {
   const [books, setBooks] = useState([]);
@@ -17,7 +16,7 @@ const BookList = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_URL}?page=${page}&limit=${limit}`);
+        const res = await fetch(`${API_URLS.BOOK.LIST}?page=${page}&limit=${limit}`);
         const data = await res.json();
         if (data.success) {
           const processedBooks = data.data.map(book => ({
@@ -25,7 +24,7 @@ const BookList = () => {
             image: book.imageUrl
               ? book.imageUrl.startsWith('http')
                 ? book.imageUrl
-                : `http://localhost:8000/book${book.imageUrl}`
+                : `${API_URLS.BOOK.LIST}${book.imageUrl}`
               : ''
           }));
           setBooks(processedBooks);

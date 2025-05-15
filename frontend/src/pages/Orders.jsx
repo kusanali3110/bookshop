@@ -1,6 +1,7 @@
 import React from 'react'
 import { useShop } from '../context/ShopContext'
 import Title from '../components/Title'
+import { API_URLS } from '../config/api'
 
 const Orders = () => {
   const { orders } = useShop();
