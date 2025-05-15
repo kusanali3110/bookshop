@@ -1,33 +1,25 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext';
-import Title from './Title';
-import ProductItem from './ProductItem';
+import React from 'react'
+import { useShop } from '../context/ShopContext'
+import ProductItem from './ProductItem'
 
-const RelatedProducts = ({category,subCategory}) => {
+const RelatedProducts = () => {
+  const { products } = useShop();
+  const relatedProducts = products.slice(0, 4);
 
-    const {products} = useContext(ShopContext);
-    const [related, setRelated] = useState([]);
-    
-    useEffect(() =>{
-
-        if (products.length > 0) {
-            
-            let productsCopy = products.slice();
-            productsCopy = productsCopy.filter((item) => category === item.category);
-            productsCopy = productsCopy.filter((item) => subCategory === item.subCategory);
-            setRelated(productsCopy.slice(0,5));
-            
-        }
-
-    },[products])
   return (
-    <div className='my-24'>
-      <div className='text-center text-3xl py-2'>
-        <Title text1={'RELATED'} text2={"PRODUCTS"}/>
-      </div>
-      <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6'>
-        {related.map((item,index)=>(
-            <ProductItem key={index} id={item._id} name={item.name} price={item.price} image={item.image} />
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Sách Liên Quan</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {relatedProducts.map((product) => (
+          <div key={product._id} className="transform hover:scale-105 transition-transform duration-200">
+            <ProductItem
+              id={product._id}
+              name={product.name}
+              price={product.price}
+              image={product.image}
+              author={product.author}
+            />
+          </div>
         ))}
       </div>
     </div>

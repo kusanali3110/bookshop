@@ -1,9 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { API_URLS } from '../config/api'
 
 const Login = () => {
-
-  const [currentState, setCurrentState] = useState('Đăng Ký');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+  const [currentState, setCurrentState] = useState('Đăng Nhập');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -13,51 +18,78 @@ const Login = () => {
     gender: '',
     date_of_birth: '',
   });
+  const [error, setError] = useState('');
+
+  // Set initial state based on URL query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode');
+    if (mode === 'register') {
+      setCurrentState('Đăng Ký');
+    } else {
+      setCurrentState('Đăng Nhập');
+    }
+  }, [location]);
 
   const onChangeHandler = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(''); // Clear error when user types
   };
   
   const onSubmmitHandler = async (event) => {
     event.preventDefault();
+    setError('');
+
     if (currentState === 'Đăng Ký') {
       try {
-        const url = 'http://2hbookshopproject.site/api/auth/register';
         const payload = {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           gender: formData.gender,
-          date_of_birth: formData.dateOfBirth,
+          date_of_birth: formData.date_of_birth,
           username: formData.username,
           email: formData.email,
           password: formData.password,
         };
 
-        const response = await axios.post(url, payload);
+        const response = await axios.post(API_URLS.AUTH.REGISTER, payload);
         console.log('Response:', response.data);
         alert('Đăng Ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản!');
+        setCurrentState('Đăng Nhập'); // Switch to login after successful registration
       } catch (error) {
         console.error('Error:', error.response?.data || error.message);
-        alert('Đăng Ký thất bại!');
+        setError(error.response?.data?.detail || 'Đăng Ký thất bại!');
       }
     }
     else if (currentState === 'Đăng Nhập') {
       try {
-        const url = 'http://2hbookshopproject.site/api/auth/login';
         const payload = {
-          username_or_email: formData.username || formData.email,
+          email: formData.email, // Can be email or username
           password: formData.password,
         };
 
-        const response = await axios.post(url, payload);
+        const response = await axios.post(API_URLS.AUTH.LOGIN, payload);
         console.log('Response:', response.data);
+        
+        // Get user info
+        const userResponse = await axios.get(API_URLS.AUTH.ME, {
+          headers: {
+            'Authorization': `Bearer ${response.data.access_token}`
+          }
+        });
+        
+        // Use AuthContext to handle login
+        login(userResponse.data, response.data.access_token);
+        
         alert('Đăng Nhập thành công!');
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        window.location.href = '/';
+        navigate('/'); // Use navigate instead of window.location
       } catch (error) {
         console.error('Error:', error.response?.data || error.message);
-        alert('Đăng nhập thất bại!');
+        if (error.response?.status === 403) {
+          setError('Email chưa được xác nhận. Vui lòng kiểm tra email của bạn!');
+        } else {
+          setError(error.response?.data?.detail || 'Đăng nhập thất bại!');
+        }
       }
     }
   }
@@ -68,12 +100,19 @@ const Login = () => {
         <p className='prata-regular text-3xl'>{currentState}</p>
         <hr className='border-none h-[1.5px] w-8 bg-gray-800' />
       </div>
+      
+      {error && (
+        <div className='w-full p-2 text-red-600 text-sm bg-red-100 rounded'>
+          {error}
+        </div>
+      )}
+
       {currentState === 'Đăng Ký' && (
         <>
           <input
             type="text"
-            name="firstName"
-            value={formData.firstName}
+            name="first_name"
+            value={formData.first_name}
             onChange={onChangeHandler}
             className='w-full px-3 py-2 border border-gray-800'
             placeholder='First Name'
@@ -81,8 +120,8 @@ const Login = () => {
           />
           <input
             type="text"
-            name="lastName"
-            value={formData.lastName}
+            name="last_name"
+            value={formData.last_name}
             onChange={onChangeHandler}
             className='w-full px-3 py-2 border border-gray-800'
             placeholder='Last Name'
@@ -102,10 +141,11 @@ const Login = () => {
           </select>
           <input
             type="date"
-            name="dateOfBirth"
-            value={formData.dateOfBirth}
+            name="date_of_birth"
+            value={formData.date_of_birth}
             onChange={onChangeHandler}
             className='w-full px-3 py-2 border border-gray-800'
+            placeholder='Date of Birth'
             required
           />
           <input
@@ -139,12 +179,12 @@ const Login = () => {
       />
       <div className='w-full flex justify-between text-sm mt-[-8px]'>
         {currentState === 'Đăng Nhập' ? (
-          <p onClick={() => setCurrentState('Đăng Ký')} className='cursor-pointer'>Tạo Tài Khoản</p>
+          <p onClick={() => setCurrentState('Đăng Ký')} className='cursor-pointer hover:text-gray-600'>Tạo Tài Khoản</p>
         ) : (
-          <p onClick={() => setCurrentState('Đăng Nhập')} className='cursor-pointer'>Đăng nhập ở đây</p>
+          <p onClick={() => setCurrentState('Đăng Nhập')} className='cursor-pointer hover:text-gray-600'>Đăng nhập ở đây</p>
         )}
       </div>
-      <button className='bg-black text-white font-light px-8 py-2 mt-4'>
+      <button className='bg-black text-white font-light px-8 py-2 mt-4 hover:bg-gray-800 transition-colors'>
         {currentState === 'Đăng Nhập' ? 'Đăng Nhập' : 'Đăng Ký'}
       </button>
     </form>

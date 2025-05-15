@@ -1,80 +1,74 @@
-import { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState, useContext } from 'react';
 import { products } from "../assets/assets";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-export const ShopContext = createContext();
+const ShopContext = createContext(null);
 
-const ShopContextProvider = (props) => {
-
+const ShopProvider = ({ children }) => {
     const currency = ' VND';
     const delivery_fee = 10;
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
-    const [cartItems, setCartItems] = useState({});
+    const [cartItems, setCartItems] = useState([]);
     const navigate = useNavigate();
 
-
-    
-    const addToCart = async (itemId,quantity) => {
-       
-        let cartData = structuredClone(cartItems);
-
-        if (cartData[itemId]) {
-            cartData[itemId] += quantity;
-        }
-        else {
-            cartData[itemId] = quantity;
-        }
-        setCartItems(cartData);
-    }
+    const addToCart = (item) => {
+        setCartItems([...cartItems, item]);
+    };
 
     const getCartCount = () => {
-        let totalCount = 0;
-        for (const items in cartItems) {
-            totalCount += cartItems[items];
-        }
-        return totalCount;
-    }
-    const updateQuantity = async (itemId, quantity) => {
-        let cartData = structuredClone(cartItems);
+        return cartItems.length;
+    };
 
-        cartData[itemId] = quantity;
-        setCartItems(cartData);
-    }
+    const removeFromCart = (itemId) => {
+        setCartItems(cartItems.filter(item => item.id !== itemId));
+    };
+
+    const updateQuantity = (itemId, quantity) => {
+        setCartItems(cartItems.map(item => 
+            item.id === itemId ? { ...item, quantity } : item
+        ));
+    };
 
     const getCartAmount = () => {
-        let totalAmount = 0;
-        for (const items in cartItems) {
-            let itemInfo = products.find((product) => product._id === items);   
-            for (const item in cartItems) {
-                try {
-                    if (cartItems[items] > 0) {
-                        totalAmount += itemInfo.price * cartItems[items];
-                    }
-                } catch (Error) {
-                    
-                }
-        }
-        return totalAmount ;
-    }
-}
+        return cartItems.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+    };
+
     const value = {
-        products , currency , delivery_fee,
-        search, setSearch, showSearch, setShowSearch,
-        cartItems, addToCart,
-        getCartCount, updateQuantity,
-        getCartAmount, navigate
-    }
+        products,
+        currency,
+        delivery_fee,
+        search,
+        setSearch,
+        showSearch,
+        setShowSearch,
+        cartItems,
+        addToCart,
+        removeFromCart,
+        getCartCount,
+        updateQuantity,
+        getCartAmount,
+        navigate
+    };
+
     useEffect(() => {
         console.log(cartItems);
-        
-    },[cartItems])
+    }, [cartItems]);
+
     return (
         <ShopContext.Provider value={value}>
-            {props.children}
+            {children}
         </ShopContext.Provider>
-    )
-}
+    );
+};
 
-export default ShopContextProvider
+const useShop = () => {
+    const context = useContext(ShopContext);
+    if (!context) {
+        throw new Error('useShop must be used within a ShopProvider');
+    }
+    return context;
+};
+
+export { ShopProvider, useShop };
