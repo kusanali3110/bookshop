@@ -108,11 +108,11 @@ async def send_password_reset_email(email: EmailStr, token: str) -> bool:
 
 class EmailService:
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.sender_email = os.getenv("SENDER_EMAIL")
-        self.sender_password = os.getenv("SENDER_PASSWORD")
-        self.from_name = os.getenv("MAIL_FROM_NAME", "Bookshop Auth Service")
+        self.smtp_server = os.getenv("smtpServer", "smtp.gmail.com")
+        self.smtp_port = int(os.getenv("smtpPort", "587"))
+        self.sender_email = os.getenv("senderEmail")
+        self.sender_password = os.getenv("senderPassword")
+        self.from_name = "Bookshop Authentication Service"
         
         if not all([self.sender_email, self.sender_password]):
             logger.warning("Email configuration is missing. Email functionality will be disabled.")
