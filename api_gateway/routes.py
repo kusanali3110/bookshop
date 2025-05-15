@@ -40,12 +40,16 @@ async def proxy_request(service: str, path: str, request: Request):
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # Log the request method and URL for debugging
+            logger.info(f"Proxying {request.method} request to {url}")
+            
             response = await client.request(
                 method=request.method,
                 url=url,
                 headers=headers,
                 params=params,
-                content=body
+                content=body,
+                follow_redirects=False
             )
             
             # Get the content type from the response
@@ -53,9 +57,17 @@ async def proxy_request(service: str, path: str, request: Request):
             
             # Handle different response types
             if "application/json" in content_type:
-                return JSONResponse(content=response.json(), status_code=response.status_code)
+                return JSONResponse(
+                    content=response.json(),
+                    status_code=response.status_code,
+                    headers=dict(response.headers)
+                )
             elif "text/html" in content_type:
-                return HTMLResponse(content=response.text, status_code=response.status_code)
+                return HTMLResponse(
+                    content=response.text,
+                    status_code=response.status_code,
+                    headers=dict(response.headers)
+                )
             else:
                 # For any other content type, return the raw response
                 return Response(
