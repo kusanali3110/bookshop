@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_URLS } from '../config/api';
 
+function joinUrl(base, path) {
+  if (base.endsWith('/') && path.startsWith('/')) {
+    return base + path.slice(1);
+  }
+  if (!base.endsWith('/') && !path.startsWith('/')) {
+    return base + '/' + path;
+  }
+  return base + path;
+}
+
 const BookContext = createContext();
 
 export const useBooks = () => {
@@ -50,7 +60,11 @@ export const BookProvider = ({ children }) => {
         name: book.title || '',
         author: book.author || '',
         price: parseFloat(book.price) || 0,
-        image: book.imageUrl ? `${API_URLS.BOOK.DETAIL(book._id)}/image` : '',
+        image: book.imageUrl
+          ? book.imageUrl.startsWith('http')
+            ? book.imageUrl
+            : joinUrl(API_URLS.BOOK.LIST, book.imageUrl)
+          : '',
         description: book.description || '',
         isbn: book.isbn || '',
         publishedDate: book.publishedDate || '',
