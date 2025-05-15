@@ -15,43 +15,40 @@ jobs:
         with:
           path: main-repo
 
-      - name: Read image tags from VERSION files
-        id: read_versions
-        run: |
-          cd main-repo
-          services=$(find . -maxdepth 1 -type d ! -name '.' | sed 's|./||')
-          for service in $services; do
-            if [ -f "$service/VERSION" ]; then
-              tag=$(cat "$service/VERSION")
-              echo "$service=$tag" >> ../versions.env
-            fi
-          done
-
-      - name: Load version tags as environment variables
-        run: |
-          set -a
-          source versions.env
-          set +a
-
       - name: Checkout bookshop-config repo
         uses: actions/checkout@v4
         with:
           repository: kusanali3110/bookshop-config
-          token: ${{ secrets.PAT}}
+          token: ${{ secrets.PAT }}
           ref: main
           path: config-repo
 
       - name: Update values.yaml with new image tags
         run: |
-          values_file=config-repo/kubernetes/bookshop/values.yaml
+          # Đọc tag từ từng file VERSION trong main-repo
+          cd main-repo
+          declare -A tags
+          for dir in */; do
+            service="${dir%/}"
+            if [ -f "$service/VERSION" ]; then
+              tag=$(cat "$service/VERSION")
+              tags["$service"]=$tag
+            fi
+          done
 
-          # Helper function
+          # Cập nhật values.yaml trong config-repo
+          cd ../config-repo
+          values_file="kubernetes/bookshop/values.yaml"
+
           update_tag() {
             service=$1
             key=$2
-            tag_var=${!service}
-            if [ -n "$tag_var" ]; then
-              sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag_var|" "$values_file"
+            tag="${tags[$service]}"
+            if [ -n "$tag" ]; then
+              echo "🛠 Updating $service image to $tag"
+              sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag|" "$values_file"
+            else
+              echo "⚠️  No tag found for $service"
             fi
           }
 
@@ -60,11 +57,21 @@ jobs:
           update_tag bookService bookService.image
           update_tag cartService cartService.image
 
+      - name: Show diff for debugging
+        run: |
+          cd config-repo
+          git diff kubernetes/bookshop/values.yaml || echo "No differences found"
+
       - name: Commit and push updated values.yaml
         run: |
           cd config-repo
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add kubernetes/bookshop/values.yaml
-          git commit -m "chore: update image tags from main branch"
-          git push origin main
+
+          if git diff --quiet kubernetes/bookshop/values.yaml; then
+            echo "✅ No changes to commit"
+          else
+            git add kubernetes/bookshop/values.yaml
+            git commit -m "chore: update image tags from main branch"
+            git push origin main
+          fi
