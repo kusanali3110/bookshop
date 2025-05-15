@@ -17,12 +17,13 @@ COPY . .
 
 # Create .env file with default values
 RUN echo "MONGODB_URL=mongodb://mongodb:27017/bookshop\n\
-JWT_SECRET_KEY=your-secret-key-here\n\
+BASE_URL=http://localhost:8001\n\
+jwtSecretKey=your-secret-key-here\n\
 JWT_ALGORITHM=HS256\n\
-SMTP_SERVER=smtp.gmail.com\n\
-SMTP_PORT=587\n\
-SENDER_EMAIL=your-email@gmail.com\n\
-SENDER_PASSWORD=your-app-password" > .env
+smtpServer=smtp.gmail.com\n\
+mtpPort=587\n\
+senderEmail=your-email@gmail.com\n\
+senderPassword=your-app-password" > .env
 
 # Set Python path
 ENV PYTHONPATH=/app

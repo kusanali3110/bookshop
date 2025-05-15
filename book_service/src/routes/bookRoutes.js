@@ -48,9 +48,10 @@ const bookSchema = Joi.object({
   tags: Joi.array().items(Joi.string()).max(10),
   price: Joi.number().required().min(0),
   quantity: Joi.number().integer().min(0),
-  description: Joi.string().max(1000),
-  isbn: Joi.string().allow('', null),
-  publishedDate: Joi.date().allow('', null)
+  description: Joi.string().max(1000).allow('', null),  // Allow empty string and null
+  isbn: Joi.string().allow('', null),  // Allow empty string and null
+  publishedDate: Joi.date().allow('', null),
+  imageUrl: Joi.string().allow('', null)  // Allow imageUrl in request body
 });
 
 // Middleware for validation
@@ -70,6 +71,7 @@ const validateBook = (req, res, next) => {
 router.get('/', bookController.getAllBooks);
 router.get('/search', bookController.searchBooks);
 router.get('/tags', bookController.getAllTags);
+router.post('/upload-image', upload.single('image'), bookController.uploadImage);  // New endpoint for image upload
 router.post('/', upload.single('image'), validateBook, bookController.createBook);
 router.patch('/:id/quantity', bookController.updateQuantity);
 router.get('/:id', bookController.getBookById);

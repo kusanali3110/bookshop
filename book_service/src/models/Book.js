@@ -3,25 +3,18 @@ const mongoose = require('mongoose');
 const bookSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Book title is required'],
-    trim: true,
+    required: [true, 'Title is required'],
     maxlength: [100, 'Title cannot be more than 100 characters']
   },
   author: {
     type: String,
-    required: [true, 'Author name is required'],
-    trim: true,
+    required: [true, 'Author is required'],
     maxlength: [100, 'Author name cannot be more than 100 characters']
   },
-  tags: {
-    type: [String],
-    default: [],
-    validate: {
-      validator: function(v) {
-        return v.length <= 10; // Maximum 10 tags per book
-      },
-      message: 'A book cannot have more than 10 tags'
-    }
+  description: {
+    type: String,
+    maxlength: [1000, 'Description cannot be more than 1000 characters'],
+    default: null
   },
   price: {
     type: Number,
@@ -30,27 +23,25 @@ const bookSchema = new mongoose.Schema({
   },
   quantity: {
     type: Number,
-    required: [true, 'Quantity is required'],
-    min: [0, 'Quantity cannot be negative'],
-    default: 0
+    default: 0,
+    min: [0, 'Quantity cannot be negative']
   },
+  tags: [{
+    type: String,
+    maxlength: [50, 'Tag cannot be more than 50 characters']
+  }],
   imageUrl: {
     type: String,
     default: null
   },
-  description: {
-    type: String,
-    trim: true,
-    maxlength: [1000, 'Description cannot be more than 1000 characters']
-  },
   isbn: {
     type: String,
-    trim: true,
-    unique: true,
-    sparse: true
+    default: null,
+    sparse: true  // Allow multiple null values
   },
   publishedDate: {
-    type: Date
+    type: Date,
+    default: null
   },
   createdAt: {
     type: Date,
@@ -64,8 +55,10 @@ const bookSchema = new mongoose.Schema({
   timestamps: true // Automatically manage createdAt and updatedAt
 });
 
-// Create index for text search
-bookSchema.index({ title: 'text', author: 'text', tags: 'text' });
+// Create indexes
+bookSchema.index({ title: 'text', author: 'text', description: 'text' });
+bookSchema.index({ isbn: 1 }, { sparse: true });  // Sparse index for ISBN
+bookSchema.index({ tags: 1 });
 
 // Create the model
 const Book = mongoose.model('Book', bookSchema);

@@ -16,10 +16,22 @@ SERVICES = {
     "cart": os.getenv("CART_SERVICE_URL", "http://cart-service:8003")
 }
 
-@router.api_route("/{service}/{path:path}", methods=["GET", "POST", "PATCH", "PUT", "DELETE"])
+@router.api_route("/{service}/{path:path}", methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"])
 async def proxy_request(service: str, path: str, request: Request):
     if service not in SERVICES:
         raise HTTPException(status_code=400, detail="Invalid service")
+
+    # Handle OPTIONS request
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "3600",
+            }
+        )
 
     url = f"{SERVICES[service]}/{path}"
     headers = dict(request.headers)
@@ -28,12 +40,16 @@ async def proxy_request(service: str, path: str, request: Request):
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # Log the request method and URL for debugging
+            logger.info(f"Proxying {request.method} request to {url}")
+            
             response = await client.request(
                 method=request.method,
                 url=url,
                 headers=headers,
                 params=params,
-                content=body
+                content=body,
+                follow_redirects=False
             )
             
             # Get the content type from the response
@@ -41,9 +57,17 @@ async def proxy_request(service: str, path: str, request: Request):
             
             # Handle different response types
             if "application/json" in content_type:
-                return JSONResponse(content=response.json(), status_code=response.status_code)
+                return JSONResponse(
+                    content=response.json(),
+                    status_code=response.status_code,
+                    headers=dict(response.headers)
+                )
             elif "text/html" in content_type:
-                return HTMLResponse(content=response.text, status_code=response.status_code)
+                return HTMLResponse(
+                    content=response.text,
+                    status_code=response.status_code,
+                    headers=dict(response.headers)
+                )
             else:
                 # For any other content type, return the raw response
                 return Response(

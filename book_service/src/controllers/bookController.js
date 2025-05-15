@@ -95,6 +95,39 @@ exports.getBookById = async (req, res) => {
   }
 };
 
+// Upload image and return URL
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided'
+      });
+    }
+
+    // Return the image URL
+    const imageUrl = `/uploads/${req.file.filename}`;
+    
+    res.status(200).json({
+      success: true,
+      message: 'Image uploaded successfully',
+      data: {
+        imageUrl,
+        filename: req.file.filename,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading image',
+      error: error.message
+    });
+  }
+};
+
 // Create a new book
 exports.createBook = async (req, res) => {
   try {
@@ -102,6 +135,9 @@ exports.createBook = async (req, res) => {
     let imageUrl = null;
     if (req.file) {
       imageUrl = `/uploads/${req.file.filename}`;
+    } else if (req.body.imageUrl) {
+      // Use provided imageUrl if no file was uploaded
+      imageUrl = req.body.imageUrl;
     }
     
     // Create new book with image URL if available
@@ -159,6 +195,9 @@ exports.updateBook = async (req, res) => {
       }
       
       imageUrl = `/uploads/${req.file.filename}`;
+    } else if (req.body.imageUrl && req.body.imageUrl !== book.imageUrl) {
+      // Use new imageUrl if provided and different from current
+      imageUrl = req.body.imageUrl;
     }
     
     // Update book with new data and image URL if available

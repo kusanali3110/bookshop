@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+a.active hr {
+    display: block;
+}
+
+html, body, .font-vi {
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+.prata-regular {
+    font-family: "Prata", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  ::-webkit-scrollbar{
+    width: 12px;
+    background: #f1f1f1;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2563eb;
+    border-radius: 6px;
+    border: 2px solid #f1f1f1;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #1d4ed8;
+  }
+  
+  @media (max-width: 640px) {
+    a.active{
+        background-color: black;
+        color: white;
+    }
+  }

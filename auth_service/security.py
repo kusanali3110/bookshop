@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT Configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_SECRET_KEY = os.getenv("jwtSecretKey")
 if not JWT_SECRET_KEY:
     logger.warning("JWT_SECRET_KEY environment variable not set, using default")
     JWT_SECRET_KEY = "your-secret-key-here"

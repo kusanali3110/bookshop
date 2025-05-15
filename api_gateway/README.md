@@ -63,7 +63,7 @@ api_gateway/
 
 To add a new service to the gateway:
 
-1. Add the service URL to the routes.py file
+1. Add the service URL to the routes.py file.
 2. Create new route handlers for the service
 3. Update the docker-compose.yml file to include the new service
 

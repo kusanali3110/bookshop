@@ -1,138 +1,16 @@
-# Book Service
+# Book Service API
 
-Book management and inventory service for the BookShop application.
+A RESTful API service for managing books and their images. Built with Node.js, Express, and MongoDB.
 
 ## Features
 
-- Book CRUD operations
-- Book search and filtering
-- Category management
-- Inventory tracking
+- CRUD operations for books
 - Image upload and management
+- Search, filter, and pagination
 - Tag management
+- Health check endpoint
 
-## API Endpoints
-
-### Books
-
-| Method | Endpoint | Description | Query Parameters | Request Body | Response |
-|--------|----------|-------------|------------------|--------------|-----------|
-| GET | `/` | Get all books | `page`, `limit`, `sort`, `category`, `author`, `tags` | - | `{ "books": [...], "total": number, "page": number }` |
-| GET | `/:id` | Get book by ID | - | - | `{ "book": { ... } }` |
-| POST | `/` | Create new book | - | `{ "title": "...", "author": "...", "price": number, ... }` | `{ "book": { ... } }` |
-| PUT | `/:id` | Update book | - | `{ "title": "...", "price": number, ... }` | `{ "book": { ... } }` |
-| DELETE | `/:id` | Delete book | - | - | `{ "message": "Book deleted" }` |
-| GET | `/search` | Search books | `q`, `page`, `limit` | - | `{ "books": [...], "total": number }` |
-| PUT | `/:id/quantity` | Update book quantity | - | `{ "quantity": number }` | `{ "book": { ... } }` |
-| GET | `/tags` | Get all unique tags | - | - | `{ "tags": [...] }` |
-
-
-## Book Data Model
-
-```json
-{
-  "id": "string (UUID)",
-  "title": "string (required)",
-  "author": "string (required)",
-  "description": "string",
-  "price": "number (required)",
-  "category": "string (required)",
-  "tags": "string[]",
-  "quantity": "number (required)",
-  "imageUrl": "string",
-  "isbn": "string",
-  "publishedDate": "string (YYYY-MM-DD)",
-  "createdAt": "datetime",
-  "updatedAt": "datetime"
-}
-```
-
-## Setup
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-3. Run the service:
-   ```bash
-   npm start
-   ```
-
-## Docker
-
-Build and run with Docker:
-
-```bash
-docker-compose up -d
-```
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| PORT | Service port | 8002 |
-| MONGODB_URI | MongoDB connection URL | mongodb://mongodb:27017/bookshop |
-| NODE_ENV | Environment | development |
-| UPLOAD_DIR | Image upload directory | uploads |
-
-## Query Parameters
-
-### Get All Books
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10)
-- `sort`: Sort field (default: createdAt)
-- `order`: Sort order (asc/desc)
-- `category`: Filter by category
-- `author`: Filter by author
-- `tags`: Filter by tags (comma-separated)
-- `minPrice`: Minimum price
-- `maxPrice`: Maximum price
-
-### Search Books
-- `q`: Search query
-- `page`: Page number
-- `limit`: Items per page
-- `fields`: Search fields (comma-separated)
-
-## Error Handling
-
-The API uses standard HTTP status codes:
-
-- 200: Success
-- 201: Created
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-- 500: Internal Server Error
-
-Error responses include a message and details:
-
-```json
-{
-  "error": "Error message",
-  "code": "ERROR_CODE"
-}
-```
-
-## Integration with Other Services
-
-The Book Service integrates with:
-
-1. **Auth Service**: For user authentication
-2. **Cart Service**: For inventory management
-3. **API Gateway**: For routing requests
-
-## Development
-
-### Project Structure
+## Project Structure
 
 ```
 book_service/
@@ -140,8 +18,6 @@ book_service/
 │   ├── controllers/    # Request handlers
 │   ├── models/         # Database models
 │   ├── routes/         # API routes
-│   ├── services/       # Business logic
-│   ├── utils/          # Utility functions
 │   └── index.js        # Application entry point
 ├── uploads/            # Image upload directory
 ├── package.json        # Node.js dependencies
@@ -149,11 +25,189 @@ book_service/
 └── docker-compose.yml  # Docker Compose configuration
 ```
 
-### Adding New Features
+## Setup & Installation
 
-1. Create new models in `src/models/`
-2. Add controllers in `src/controllers/`
-3. Define routes in `src/routes/`
-4. Implement business logic in `src/services/`
-5. Update tests
-6. Update documentation 
+1. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd book_service
+   ```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+3. **Create `.env` file** (see below for variables)
+   ```env
+   PORT=8002
+   MONGODB_URI=mongodb://localhost:27017/bookshop
+   ```
+4. **Start the service**
+   ```bash
+   npm start
+   ```
+   The service will run on `http://localhost:8002` by default.
+
+## Environment Variables
+
+| Variable      | Description                | Default                                 |
+|--------------|----------------------------|-----------------------------------------|
+| PORT         | Service port               | 8002                                    |
+| MONGODB_URI  | MongoDB connection string  | mongodb://localhost:27017/bookshop      |
+| NODE_ENV     | Environment                | development                             |
+
+## Docker Usage
+
+Build and run with Docker Compose:
+```bash
+docker-compose up --build
+```
+
+## Health Check
+- `GET /health`  
+  Returns `{ status: 'ok', service: 'book-service' }` if service is running.
+
+## API Endpoints
+
+### Books
+- `GET /` — Get all books (supports pagination, filtering)
+- `GET /search` — Search books by title, author, tags, price
+- `GET /tags` — Get all unique tags
+- `POST /upload-image` — Upload a book image (see below)
+- `POST /` — Create a new book (with or without image)
+- `GET /:id` — Get a book by ID
+- `PUT /:id` — Update a book (with or without image)
+- `PATCH /:id/quantity` — Update book quantity
+- `DELETE /:id` — Delete a book
+
+### Example: Get All Books
+```
+GET /?page=1&limit=10&author=John&tags=Fiction&minPrice=50000&maxPrice=200000
+```
+- Supports query params: `page`, `limit`, `author`, `tags`, `minPrice`, `maxPrice`, `title`
+
+### Example: Search Books
+```
+GET /search?query=harry+potter
+```
+
+### Example: Get Book by ID
+```
+GET /<book_id>
+```
+
+### Example: Create Book (JSON)
+```
+POST /
+Content-Type: application/json
+{
+  "title": "Book Title",
+  "author": "Author Name",
+  "price": 120000,
+  "quantity": 10,
+  "tags": ["Fiction", "Adventure"],
+  "description": "...",
+  "isbn": "1234567890",
+  "publishedDate": "2023-01-01"
+}
+```
+
+### Example: Create Book with Image (multipart/form-data)
+```
+POST /
+Content-Type: multipart/form-data
+- image=@/path/to/image.jpg
+- title=Book Title
+- author=Author Name
+- price=120000
+...
+```
+
+### Example: Upload Image Only
+```
+POST /upload-image
+Content-Type: multipart/form-data
+- image=@/path/to/image.jpg
+```
+- Response:
+```json
+{
+  "success": true,
+  "data": {
+    "imageUrl": "/uploads/book-1680000000000.jpg",
+    ...
+  }
+}
+```
+
+### Example: Update Book
+```
+PUT /<book_id>
+Content-Type: application/json or multipart/form-data
+```
+
+### Example: Delete Book
+```
+DELETE /<book_id>
+```
+
+### Example: Update Quantity
+```
+PATCH /<book_id>/quantity
+Content-Type: application/json
+{
+  "quantity": 20
+}
+```
+
+## Book Schema
+
+```json
+{
+  "_id": "string (MongoDB ObjectId)",
+  "title": "string (required, max 100)",
+  "author": "string (required, max 100)",
+  "description": "string (max 1000)",
+  "price": "number (required, >=0)",
+  "quantity": "number (>=0, default 0)",
+  "tags": ["string"],
+  "imageUrl": "string (path to uploaded image)",
+  "isbn": "string (optional)",
+  "publishedDate": "string (YYYY-MM-DD, optional)",
+  "createdAt": "datetime",
+  "updatedAt": "datetime"
+}
+```
+
+## Image Upload
+- Supported formats: JPEG, PNG, JPG, WebP
+- Max file size: 5MB
+- Images are stored in `/uploads` and served at `/uploads/<filename>`
+
+## Error Handling
+- Standard HTTP status codes (200, 201, 400, 404, 500...)
+- Error responses:
+```json
+{
+  "success": false,
+  "message": "Error message",
+  "error": "Error details"
+}
+```
+
+## Data Import
+
+Use the provided `push_books.py` script (in `../books_data/`) to import bulk book data:
+```bash
+cd ../books_data
+python push_books.py
+```
+
+## Development & Contribution
+- Add new models in `src/models/`
+- Add controllers in `src/controllers/`
+- Define routes in `src/routes/`
+- Update documentation as needed
+
+---
+
+For any questions or issues, please open an issue or contact the maintainer. 
