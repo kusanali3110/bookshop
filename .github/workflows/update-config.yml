@@ -10,13 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Checkout repo chính (chứa source code và các file VERSION)
       - name: Checkout main repo (source code)
         uses: actions/checkout@v3
         with:
           path: main-repo
 
-      # Bước 2: Checkout repo cấu hình Helm
       - name: Checkout bookshop-config repo
         uses: actions/checkout@v4
         with:
@@ -25,13 +23,19 @@ jobs:
           ref: main
           path: config-repo
 
-      # Bước 3: Đọc VERSION từ repo chính và cập nhật values.yaml
       - name: Update image tags in Helm values.yaml
         run: |
-          # Tạo associative array để lưu các tag
           declare -A tags
 
-          # Bước 1: Đọc các VERSION từ main-repo
+          # Ánh xạ giữa tên thư mục và key trong values.yaml
+          declare -A map=(
+            [api_gateway]="apiGateway.image"
+            [auth_service]="authService.image"
+            [book_service]="bookService.image"
+            [cart_service]="cartService.image"
+          )
+
+          # Bước 1: Đọc VERSION từ main-repo
           cd main-repo
           for dir in */; do
             service="${dir%/}"
@@ -45,24 +49,17 @@ jobs:
           cd ../config-repo
           values_file="kubernetes/bookshop/values.yaml"
 
-          update_tag() {
-            service=$1
-            key=$2
+          for service in "${!map[@]}"; do
             tag="${tags[$service]}"
+            key="${map[$service]}"
             if [ -n "$tag" ]; then
-              echo "🛠 Updating $service image to $tag"
+              echo "🛠 Updating $service ($key) to $tag"
               sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag|" "$values_file"
             else
               echo "⚠️  No tag found for $service"
             fi
-          }
+          done
 
-          update_tag apiGateway apiGateway.image
-          update_tag authService authService.image
-          update_tag bookService bookService.image
-          update_tag cartService cartService.image
-
-      # Bước 4: Commit và push nếu có thay đổi
       - name: Commit and push updated values.yaml
         run: |
           cd config-repo
