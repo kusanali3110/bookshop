@@ -23,19 +23,19 @@ jobs:
           ref: main
           path: config-repo
 
-      - name: Update image tags in Helm values.yaml
+      - name: Update image tags in values.yaml
         run: |
           declare -A tags
 
-          # Ánh xạ giữa tên thư mục và key trong values.yaml
+          # Map thư mục service <-> key trong values.yaml
           declare -A map=(
-            [api_gateway]="apiGateway.image"
-            [auth_service]="authService.image"
-            [book_service]="bookService.image"
-            [cart_service]="cartService.image"
+            [api_gateway]="apiGateway"
+            [auth_service]="authService"
+            [book_service]="bookService"
+            [cart_service]="cartService"
           )
 
-          # Bước 1: Đọc VERSION từ main-repo
+          # Bước 1: Đọc tag từ file VERSION trong main-repo
           cd main-repo
           for dir in */; do
             service="${dir%/}"
@@ -50,11 +50,11 @@ jobs:
           values_file="kubernetes/bookshop/values.yaml"
 
           for service in "${!map[@]}"; do
+            yaml_key="${map[$service]}"
             tag="${tags[$service]}"
-            key="${map[$service]}"
             if [ -n "$tag" ]; then
-              echo "🛠 Updating $service ($key) to $tag"
-              sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag|" "$values_file"
+              echo "🛠 Updating $yaml_key.image to $tag"
+              sed -i "/^$yaml_key:/,/^[^[:space:]]/ s|^\(\s*image:\s*nahidacunny/bookshop-$service:\).*|\1$tag|" "$values_file"
             else
               echo "⚠️  No tag found for $service"
             fi
@@ -66,7 +66,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          if git diff --quiet; then
+          if git diff --exit-code -- kubernetes/bookshop/values.yaml > /dev/null; then
             echo "✅ No changes to commit."
           else
             git add kubernetes/bookshop/values.yaml
