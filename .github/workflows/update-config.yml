@@ -10,11 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Bước 1: Checkout repo chính (chứa source code và các file VERSION)
       - name: Checkout main repo (source code)
         uses: actions/checkout@v3
         with:
           path: main-repo
 
+      # Bước 2: Checkout repo cấu hình Helm
       - name: Checkout bookshop-config repo
         uses: actions/checkout@v4
         with:
@@ -23,35 +25,33 @@ jobs:
           ref: main
           path: config-repo
 
-      - name: Read and update image tags
+      # Bước 3: Đọc VERSION từ repo chính và cập nhật values.yaml
+      - name: Update image tags in Helm values.yaml
         run: |
-          # Bước 1: Đọc các tag từ file VERSION
-          cd main-repo
-          > ../tags.env  # tạo file chứa các biến môi trường
+          # Tạo associative array để lưu các tag
+          declare -A tags
 
+          # Bước 1: Đọc các VERSION từ main-repo
+          cd main-repo
           for dir in */; do
             service="${dir%/}"
             if [ -f "$service/VERSION" ]; then
               tag=$(cat "$service/VERSION")
-              echo "$service=$tag" >> ../tags.env
+              tags["$service"]=$tag
             fi
           done
 
-          # Bước 2: Cập nhật values.yaml trong repo cấu hình
+          # Bước 2: Cập nhật values.yaml trong config-repo
           cd ../config-repo
           values_file="kubernetes/bookshop/values.yaml"
 
-          # Load các biến tag từ file tags.env
-          source ../tags.env
-
-          # Hàm cập nhật từng dòng image tag
           update_tag() {
             service=$1
             key=$2
-            tag_var="${!service}"
-            if [ -n "$tag_var" ]; then
-              echo "🛠 Updating $service image to $tag_var"
-              sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag_var|" "$values_file"
+            tag="${tags[$service]}"
+            if [ -n "$tag" ]; then
+              echo "🛠 Updating $service image to $tag"
+              sed -i "s|\($key:\s*nahidacunny/bookshop-$service:\).*|\1$tag|" "$values_file"
             else
               echo "⚠️  No tag found for $service"
             fi
@@ -62,14 +62,15 @@ jobs:
           update_tag bookService bookService.image
           update_tag cartService cartService.image
 
+      # Bước 4: Commit và push nếu có thay đổi
       - name: Commit and push updated values.yaml
         run: |
           cd config-repo
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          if git diff --quiet kubernetes/bookshop/values.yaml; then
-            echo "✅ No changes in values.yaml, skipping commit."
+          if git diff --quiet; then
+            echo "✅ No changes to commit."
           else
             git add kubernetes/bookshop/values.yaml
             git commit -m "chore: update image tags from main branch"
