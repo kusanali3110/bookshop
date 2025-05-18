@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from database import db
 from security import (
     hash_password,
@@ -21,9 +21,10 @@ from models import (
 )
 from email_service import email_service
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 import asyncio
+from fastapi.security import OAuth2PasswordRequestForm
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -123,44 +124,81 @@ async def register(user: UserCreate):
             detail=f"Error creating user: {str(e)}"
         )
 
-@router.post("/login", response_model=Token)
-async def login(user: UserLogin):
-    """Login with email/username and password"""
+def authenticate_user(username: str, password: str):
+    """Authenticate user with username/email and password"""
     try:
         # Check if the login identifier is an email or username
-        if "@" in user.email:  # Assume it's an email if it contains @
-            user_data = db.users_collection.find_one({"email": user.email})
+        if "@" in username:  # Assume it's an email if it contains @
+            user_data = db.users_collection.find_one({"email": username})
         else:  # Otherwise assume it's a username
-            user_data = db.users_collection.find_one({"username": user.email})
+            user_data = db.users_collection.find_one({"username": username})
             
-        if not user_data or not verify_password(user.password, user_data["password_hash"]):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials"
-            )
-        
+        if not user_data or not verify_password(password, user_data["password_hash"]):
+            return None
+            
         if not user_data["is_verified"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Email not verified"
             )
+            
+        # Convert _id to string id
+        user_data["id"] = str(user_data["_id"])
         
-        # Create access token
-        access_token = create_access_token({"sub": user_data["email"]})
-        logger.info(f"User logged in successfully: {user_data['email']}")
-        return Token(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=1800  # 30 minutes
-        )
+        # Convert date_of_birth from datetime to string if exists
+        if "date_of_birth" in user_data and isinstance(user_data["date_of_birth"], datetime):
+            user_data["date_of_birth"] = user_data["date_of_birth"].strftime('%Y-%m-%d')
+            
+        return user_data
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Login error: {e}")
+        logger.error(f"Authentication error: {e}")
+        return None
+
+@router.post("/login")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error during login"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    access_token = create_access_token(
+        data={"sub": user["email"]},
+        expires_delta=timedelta(minutes=30)
+    )
+    
+    response = JSONResponse(
+        content={
+            "success": True,
+            "data": {
+                "id": user["id"],
+                "email": user["email"],
+                "username": user["username"],
+                "first_name": user.get("first_name"),
+                "last_name": user.get("last_name"),
+                "is_active": user.get("is_active", True),
+                "is_verified": user.get("is_verified", False),
+                "created_at": user.get("created_at").isoformat() if user.get("created_at") else None,
+                "updated_at": user.get("updated_at").isoformat() if user.get("updated_at") else None
+            }
+        }
+    )
+    
+    # Set cookie with token
+    response.set_cookie(
+        key="token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=1800  # 30 minutes
+    )
+    
+    return response
 
 @router.get("/verify-email", response_class=HTMLResponse)
 async def verify_email(user_id: str, token: str):
