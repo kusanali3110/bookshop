@@ -5,34 +5,74 @@ const fs = require('fs').promises;
 // Get all books with pagination and filtering
 exports.getAllBooks = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    
-    // Build filter based on query parameters
+    const {
+      title,
+      author,
+      tags,
+      minPrice,
+      maxPrice,
+      minQuantity,
+      maxQuantity,
+      isbn,
+      publishedDate,
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    // Build filter object
     const filter = {};
-    if (req.query.title) filter.title = { $regex: req.query.title, $options: 'i' };
-    if (req.query.author) filter.author = { $regex: req.query.author, $options: 'i' };
-    if (req.query.tags) filter.tags = { $in: req.query.tags.split(',') };
-    if (req.query.minPrice) filter.price = { $gte: parseFloat(req.query.minPrice) };
-    if (req.query.maxPrice) filter.price = { ...filter.price, $lte: parseFloat(req.query.maxPrice) };
-    
-    // Execute query with pagination and exclude __v field
+
+    // Text search
+    if (title) filter.title = { $regex: title, $options: 'i' };
+    if (author) filter.author = { $regex: author, $options: 'i' };
+    if (isbn) filter.isbn = { $regex: isbn, $options: 'i' };
+
+    // Array search
+    if (tags) {
+      const tagArray = tags.split(',').map(tag => tag.trim());
+      filter.tags = { $in: tagArray };
+    }
+
+    // Numeric range search
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    if (minQuantity || maxQuantity) {
+      filter.quantity = {};
+      if (minQuantity) filter.quantity.$gte = parseInt(minQuantity);
+      if (maxQuantity) filter.quantity.$lte = parseInt(maxQuantity);
+    }
+
+    // Date search
+    if (publishedDate) {
+      const date = new Date(publishedDate);
+      if (!isNaN(date.getTime())) {
+        filter.publishedDate = date;
+      }
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Execute query with pagination
     const books = await Book.find(filter)
       .select('-__v')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
-    
+      .limit(parseInt(limit));
+
     // Get total count for pagination
     const total = await Book.countDocuments(filter);
-    
+
     res.status(200).json({
       success: true,
       count: books.length,
       total,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page),
       data: books
     });
   } catch (error) {
@@ -257,41 +297,6 @@ exports.deleteBook = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting book',
-      error: error.message
-    });
-  }
-};
-
-// Search books by text
-exports.searchBooks = async (req, res) => {
-  try {
-    const { query } = req.query;
-    
-    if (!query) {
-      return res.status(400).json({
-        success: false,
-        message: 'Search query is required'
-      });
-    }
-    
-    const books = await Book.find(
-      { $text: { $search: query } },
-      { score: { $meta: 'textScore' } }
-    )
-    .select('-__v')
-    .sort({ score: { $meta: 'textScore' } })
-    .limit(20);
-    
-    res.status(200).json({
-      success: true,
-      count: books.length,
-      data: books
-    });
-  } catch (error) {
-    console.error('Error searching books:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error searching books',
       error: error.message
     });
   }
