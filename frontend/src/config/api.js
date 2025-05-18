@@ -1,4 +1,4 @@
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://api-gateway:8000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://2hbookshopproject.site/api';
 
 export const API_URLS = {
   AUTH: {
@@ -8,7 +8,7 @@ export const API_URLS = {
     VERIFY_EMAIL: `${BACKEND_URL}/auth/verify-email`,
   },
   BOOK: {
-    LIST: `${BACKEND_URL}/book`,
+    LIST: `${BACKEND_URL}/book/`,
     DETAIL: (id) => `${BACKEND_URL}/book/${id}`,
     UPLOAD_IMAGE: `${BACKEND_URL}/book/upload-image`,
   },

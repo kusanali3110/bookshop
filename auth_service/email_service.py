@@ -144,7 +144,7 @@ class EmailService:
             # This allows the application to continue even if email fails
 
     async def send_verification_email(self, recipient: str, token: str, user_id: str) -> None:
-        verification_url = f"{BASE_URL}/auth/verify-email?user_id={user_id}&token={token}"
+        verification_url = f"{BASE_URL}/api/auth/verify-email?user_id={user_id}&token={token}"
         subject = "Verify Your Email"
         body = f"""
         <html>
@@ -160,7 +160,7 @@ class EmailService:
         await self._send_email(recipient, subject, body)
 
     async def send_password_reset_email(self, recipient: str, token: str) -> None:
-        reset_url = f"{BASE_URL}/auth/reset-password?token={token}"
+        reset_url = f"{BASE_URL}/api/auth/reset-password?token={token}"
         subject = "Password Reset Request"
         body = f"""
         <html>

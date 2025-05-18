@@ -2,6 +2,16 @@ import React, { useEffect, useState } from 'react';
 import ProductItem from './ProductItem';
 import { API_URLS } from '../config/api';
 
+function joinUrl(base, path) {
+  if (base.endsWith('/') && path.startsWith('/')) {
+    return base + path.slice(1);
+  }
+  if (!base.endsWith('/') && !path.startsWith('/')) {
+    return base + '/' + path;
+  }
+  return base + path;
+}
+
 const BookList = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +34,7 @@ const BookList = () => {
             image: book.imageUrl
               ? book.imageUrl.startsWith('http')
                 ? book.imageUrl
-                : `${API_URLS.BOOK.LIST}${book.imageUrl}`
+                : joinUrl(API_URLS.BOOK.LIST, book.imageUrl)
               : ''
           }));
           setBooks(processedBooks);
