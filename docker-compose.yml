@@ -77,18 +77,6 @@ services:
       - bookshop_network
 
   # Frontend Service
-  frontend:
-    build:
-      context: ./frontend
-    container_name: frontend
-    ports:
-      - "80:80"
-    environment:
-      - VITE_BACKEND_URL=http://localhost:8000
-    depends_on:
-      - api_gateway
-    networks:
-      - bookshop_network
 
   # MongoDB
   mongodb:
@@ -98,6 +86,17 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - bookshop_network
+  
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api_gateway
     networks:
       - bookshop_network
 
