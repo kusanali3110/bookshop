@@ -1,246 +1,232 @@
-# Cart Service
+# Cart Service API
 
-The Cart Service is a microservice responsible for managing shopping carts in the BookShop application. It provides APIs for adding, updating, removing, and retrieving items in a user's cart.
+A RESTful API service for managing user shopping carts. Built with Go, Gin, and MongoDB.
 
 ## Features
 
-- User authentication via JWT tokens
-- Cart management (create, read, update, delete)
-- Integration with Book Service for product information
-- MongoDB for data persistence.
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check endpoint |
-| GET | `/` | Get the user's cart |
-| POST | `/items` | Add an item to the cart |
-| PUT | `/items/:itemId` | Update the quantity of an item in the cart |
-| DELETE | `/items/:itemId` | Remove an item from the cart |
-| DELETE | `/` | Clear the cart |
-
-## Request/Response Examples
-
-### Get Cart
-
-**Request:**
-```
-GET /
-Authorization: Bearer <jwt_token>
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "60d21b4667d0d8992e610c85",
-    "userId": "user123",
-    "items": [
-      {
-        "id": "60d21b4667d0d8992e610c86",
-        "bookId": "book123",
-        "quantity": 2,
-        "price": 19.99,
-        "title": "Sample Book",
-        "imageUrl": "https://example.com/book.jpg"
-      }
-    ],
-    "createdAt": "2023-04-16T12:00:00Z",
-    "updatedAt": "2023-04-16T12:00:00Z"
-  }
-}
-```
-
-### Add to Cart
-
-**Request:**
-```
-POST /items
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-
-{
-  "bookId": "book123",
-  "quantity": 2
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "message": "Item added to cart",
-    "item": {
-      "id": "60d21b4667d0d8992e610c86",
-      "bookId": "book123",
-      "quantity": 2,
-      "price": 19.99,
-      "title": "Sample Book",
-      "imageUrl": "https://example.com/book.jpg"
-    }
-  }
-}
-```
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB connection URI | `mongodb://mongodb:27017` |
-| `MONGODB_DB` | MongoDB database name | `bookshop` |
-| `AUTH_SERVICE_URL` | URL of the auth service | `http://auth-service:8001` |
-| `BOOK_SERVICE_URL` | URL of the book service | `http://book-service:8002` |
-| `PORT` | Port to listen on | `8003` |
-
-## Setup and Installation
-
-### Prerequisites
-
-- Go 1.21 or higher
-- Docker and Docker Compose
-- MongoDB
-
-### Local Development
-
-1. Clone the repository
-2. Install dependencies:
-   ```
-   go mod download
-   ```
-3. Run the service:
-   ```
-   go run main.go
-   ```
-
-### Docker Deployment
-
-1. Build the Docker image:
-   ```
-   docker build -t cart-service .
-   ```
-
-2. Run with Docker Compose:
-   ```
-   docker-compose up -d
-   ```
+- Add items to cart
+- Update cart items
+- Remove items from cart
+- Clear cart
+- View cart contents
+- Integration with Book Service for real-time book details
 
 ## Project Structure
 
 ```
 cart_service/
-├── main.go              # Main application entry point
-├── models/              # Data models
-│   └── cart.go          # Cart and CartItem models
-├── database/            # Database operations
-│   └── db.go            # MongoDB operations
-├── handlers/            # HTTP request handlers
-│   └── cart.go          # Cart API handlers
-├── middleware/          # Middleware components
-│   └── auth.go          # Authentication middleware
-├── Dockerfile           # Docker build configuration
-├── docker-compose.yml   # Docker Compose configuration
-├── .env                 # Environment variables
-└── README.md            # Documentation
+├── database/     # Database operations
+├── handlers/     # Request handlers
+├── middleware/   # Middleware functions
+├── models/       # Data models
+├── services/     # External service clients
+├── main.go       # Application entry point
+└── README.md     # Documentation
 ```
 
-## Cart Data Model
+## Setup & Installation
 
-```json
-{
-  "id": "string (UUID)",
-  "userId": "string (required)",
-  "items": [
-    {
-      "bookId": "string (required)",
-      "quantity": "number (required, min 1)",
-      "price": "number (required)",
-      "title": "string (required)",
-      "imageUrl": "string"
+1. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd cart_service
+   ```
+
+2. **Install dependencies**
+   ```bash
+   go mod download
+   ```
+
+3. **Create `.env` file**
+   ```env
+   PORT=8003
+   MONGODB_URI=mongodb://localhost:27017
+   MONGODB_DB=bookshop
+   BOOK_SERVICE_URL=http://localhost:8002
+   AUTH_SERVICE_URL=http://localhost:8001
+   ```
+
+4. **Start the service**
+   ```bash
+   go run main.go
+   ```
+   The service will run on `http://localhost:8003` by default.
+
+## API Documentation
+
+### Authentication
+
+All endpoints require authentication. Include the JWT token in the Authorization header:
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+### Health Check
+- `GET /health`  
+  Returns service status.
+  ```json
+  {
+    "status": "ok",
+    "service": "cart-service"
+  }
+  ```
+
+### Cart Operations
+
+#### Get Cart
+- `GET /`
+  Returns the current user's cart contents.
+  
+  Response:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "items": [
+        {
+          "id": "60d21b4667d0d8992e610c85",
+          "bookId": "60d21b4667d0d8992e610c86",
+          "quantity": 2,
+          "price": 19.99,
+          "title": "Sample Book",
+          "imageUrl": "https://example.com/book.jpg"
+        }
+      ]
     }
-  ],
-  "total": "number (required)",
-  "createdAt": "datetime",
-  "updatedAt": "datetime"
-}
-```
+  }
+  ```
 
-## Error Handling
+#### Add Item to Cart
+- `POST /items`
+  Adds a new item to the cart.
+  
+  Request Body:
+  ```json
+  {
+    "bookId": "60d21b4667d0d8992e610c86",
+    "quantity": 2
+  }
+  ```
+  
+  Response:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "message": "Item added to cart",
+      "item": {
+        "id": "60d21b4667d0d8992e610c85",
+        "bookId": "60d21b4667d0d8992e610c86",
+        "quantity": 2,
+        "price": 19.99,
+        "title": "Sample Book",
+        "imageUrl": "https://example.com/book.jpg"
+      }
+    }
+  }
+  ```
 
-The API uses standard HTTP status codes:
+#### Update Cart Item
+- `PUT /items/:itemId`
+  Updates the quantity of an item in the cart.
+  
+  URL Parameters:
+  - `itemId`: ID of the cart item to update
+  
+  Request Body:
+  ```json
+  {
+    "quantity": 3
+  }
+  ```
+  
+  Response:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "message": "Cart item updated"
+    }
+  }
+  ```
 
-- 200: Success
-- 201: Created
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-- 500: Internal Server Error
+#### Remove Item from Cart
+- `DELETE /items/:itemId`
+  Removes an item from the cart.
+  
+  URL Parameters:
+  - `itemId`: ID of the cart item to remove
+  
+  Response:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "message": "Item removed from cart"
+    }
+  }
+  ```
 
-Error responses include a message and details:
+#### Clear Cart
+- `DELETE /`
+  Removes all items from the cart.
+  
+  Response:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "message": "Cart cleared"
+    }
+  }
+  ```
 
+## Error Responses
+
+All endpoints return error responses in the following format:
 ```json
 {
-  "error": "Error message",
-  "code": "ERROR_CODE"
+  "success": false,
+  "error": "Error message"
 }
 ```
 
-## Integration with Other Services
+Common error scenarios:
+- Invalid request body
+- Book not found
+- Cart item not found
+- Database errors
+- Authentication errors
 
-The Cart Service integrates with:
+## Integration with Book Service
 
-1. **Auth Service**: For user authentication and validation
-2. **Book Service**: For book information and inventory checks
-3. **API Gateway**: For routing requests
+The cart service integrates with the book service to fetch real-time book details when adding items to the cart. This ensures that cart items always have up-to-date information about:
+- Book title
+- Price
+- Image URL
+
+The book service URL is configured via the `BOOK_SERVICE_URL` environment variable.
 
 ## Development
 
-### Project Structure
+### Prerequisites
+- Go 1.16 or higher
+- MongoDB 4.4 or higher
+- Book Service running
+- Auth Service running
 
-```
-cart_service/
-├── main.go              # Application entry point
-├── models/             # Data models
-├── handlers/           # Request handlers
-├── services/           # Business logic
-├── utils/              # Utility functions
-├── go.mod              # Go dependencies
-├── Dockerfile          # Docker build instructions
-└── docker-compose.yml  # Docker Compose configuration
+### Running Tests
+```bash
+go test ./...
 ```
 
-### Adding New Features
+### Building
+```bash
+go build -o cart_service
+```
 
-1. Create new models in `models/`
-2. Add handlers in `handlers/`
-3. Implement business logic in `services/`
-4. Update tests
-5. Update documentation
-
-## Cart Operations
-
-### Adding Items
-- Validates book existence and availability
-- Checks user authentication
-- Updates cart totals
-- Returns updated cart
-
-### Updating Quantities
-- Validates new quantity against book inventory
-- Updates item price if book price changed
-- Recalculates cart totals
-- Returns updated cart
-
-### Removing Items
-- Removes item from cart
-- Recalculates cart totals
-- Returns updated cart
-
-### Cart Validation
-- Checks book availability
-- Validates user authentication
-- Ensures cart belongs to user
-- Maintains data consistency 
+### Docker Support
+```bash
+docker build -t cart_service .
+docker run -p 8003:8003 cart_service
+``` 

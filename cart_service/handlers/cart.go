@@ -1,14 +1,23 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"bookshop/cart_service/database"
 	"bookshop/cart_service/models"
+	"bookshop/cart_service/services"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var bookService *services.BookService
+
+// InitializeBookService initializes the book service client
+func InitializeBookService(baseURL string) {
+	bookService = services.NewBookService(baseURL)
+}
 
 // GetCart retrieves the user's cart
 func GetCart(c *gin.Context) {
@@ -44,15 +53,23 @@ func AddToCart(c *gin.Context) {
 		return
 	}
 
-	// In a real implementation, we would fetch the book details from the book service
-	// For now, we'll use mock data
+	// Fetch book details from book service
+	book, err := bookService.GetBookByID(req.BookID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Failed to fetch book details: %v", err),
+		})
+		return
+	}
+
 	item := models.CartItem{
 		ID:       primitive.NewObjectID(),
 		BookID:   req.BookID,
 		Quantity: req.Quantity,
-		Price:    19.99, // Mock price
-		Title:    "Sample Book", // Mock title
-		ImageURL: "https://example.com/book.jpg", // Mock image URL
+		Price:    book.Price,
+		Title:    book.Title,
+		ImageURL: book.ImageURL,
 	}
 
 	if err := database.AddToCart(userIDStr, item); err != nil {

@@ -37,6 +37,9 @@ func main() {
 	bookServiceURL = getEnv("BOOK_SERVICE_URL", "http://localhost:8002")
 	authServiceURL = getEnv("AUTH_SERVICE_URL", "http://localhost:8001")
 
+	// Initialize book service
+	handlers.InitializeBookService(bookServiceURL)
+
 	// Initialize Gin router
 	r := gin.Default()
 
