@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { API_URLS } from '../config/api'
 
 const ProductItem = ({ id, image, name, price, author }) => {
   const [imageError, setImageError] = useState(false);
 
-  const handleImageError = () => {
-    setImageError(true);
-  };
+  if (!id) return null;
 
   return (
     <Link to={`/product/${id}`} className="group">
@@ -16,16 +13,18 @@ const ProductItem = ({ id, image, name, price, author }) => {
           <img
             src={!imageError && image ? image : '/no-image.png'}
             alt={name}
-            className="h-full w-full object-cover object-center group-hover:opacity-75"
-            onError={handleImageError}
+            className="h-full w-full object-cover object-center group-hover:opacity-75 transition-opacity"
+            onError={() => setImageError(true)}
           />
         </div>
       </div>
       <div className="mt-4 flex flex-col">
-        <h3 className="text-sm text-gray-700 line-clamp-2">{name}</h3>
+        <h3 className="text-sm text-gray-700 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          {name}
+        </h3>
         <p className="mt-1 text-sm text-gray-500">{author}</p>
         <p className="mt-1 text-lg font-medium text-gray-900">
-          {price.toLocaleString('vi-VN')} ₫
+          {price.toLocaleString('vi-VN')} ₫
         </p>
       </div>
     </Link>

@@ -1,10 +1,10 @@
 import React from 'react'
-import { useShop } from '../context/ShopContext'
+import { useBooks } from '../context/BookContext'
 import ProductItem from './ProductItem'
 
 const RelatedProducts = () => {
-  const { products } = useShop();
-  const relatedProducts = products.slice(0, 4);
+  const { books } = useBooks();
+  const relatedProducts = books.slice(0, 4);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">

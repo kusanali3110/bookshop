@@ -35,10 +35,16 @@ export const BookProvider = ({ children }) => {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const response = await fetch(API_URLS.BOOK.LIST);
+      const response = await fetch(API_URLS.BOOK.LIST, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
       const result = await response.json();
       
       // Kiểm tra cấu trúc response
@@ -74,7 +80,6 @@ export const BookProvider = ({ children }) => {
         updatedAt: book.updatedAt || ''
       }));
 
-      console.log('Processed books:', processedBooks); // Debug log
       setBooks(processedBooks);
       setError(null);
     } catch (err) {

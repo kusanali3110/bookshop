@@ -10,17 +10,12 @@ export const API_URLS = {
   BOOK: {
     LIST: `${BACKEND_URL}/book/`,
     DETAIL: (id) => `${BACKEND_URL}/book/${id}`,
-    UPLOAD_IMAGE: `${BACKEND_URL}/book/upload-image`,
   },
   CART: {
-    GET: `${BACKEND_URL}/cart`,
-    ADD: `${BACKEND_URL}/cart/add`,
-    UPDATE: `${BACKEND_URL}/cart/update`,
-    REMOVE: `${BACKEND_URL}/cart/remove`,
-  },
-  ORDER: {
-    CREATE: `${BACKEND_URL}/order/create`,
-    LIST: `${BACKEND_URL}/order/list`,
-    DETAIL: (id) => `${BACKEND_URL}/order/${id}`,
+    GET: `${BACKEND_URL}/cart/`,
+    ADD: `${BACKEND_URL}/cart/items`,
+    UPDATE: (id) => `${BACKEND_URL}/cart/items/${id}`,
+    REMOVE: (id) => `${BACKEND_URL}/cart/items/${id}`,
+    DELETE: `${BACKEND_URL}/cart/`,
   }
 };
