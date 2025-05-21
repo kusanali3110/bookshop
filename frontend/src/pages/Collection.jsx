@@ -3,6 +3,7 @@ import { assets } from '../assets/assets';
 import Title from '../components/Title';
 import ProductItem from '../components/ProductItem';
 import { API_URLS } from '../config/api';
+import Collection from '../components/Collection';
 
 const CollectionPage = () => {
   return (
