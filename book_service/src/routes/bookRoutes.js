@@ -69,9 +69,8 @@ const validateBook = (req, res, next) => {
 
 // Routes
 router.get('/', bookController.getAllBooks);
-router.get('/search', bookController.searchBooks);
 router.get('/tags', bookController.getAllTags);
-router.post('/upload-image', upload.single('image'), bookController.uploadImage);  // New endpoint for image upload
+router.post('/upload-image', upload.single('image'), bookController.uploadImage);
 router.post('/', upload.single('image'), validateBook, bookController.createBook);
 router.patch('/:id/quantity', bookController.updateQuantity);
 router.get('/:id', bookController.getBookById);

@@ -519,4 +519,3 @@ async def update_current_user(request: Request, user_update: dict):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error updating user profile"
         )
-

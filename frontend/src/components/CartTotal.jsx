@@ -1,10 +1,10 @@
 import React from 'react'
-import { useShop } from '../context/ShopContext'
+import { useCart } from '../context/CartContext'
 import { useNavigate } from 'react-router-dom'
 import Title from './Title';
 
 const CartTotal = () => {
-  const { getTotalCartAmount } = useShop();
+  const { getCartTotal } = useCart();
   const navigate = useNavigate();
 
   return (
@@ -17,7 +17,7 @@ const CartTotal = () => {
         <div className='flex flex-col gap-4 border-b border-gray-200 pb-4'>
           <p className='flex justify-between text-base text-gray-700'>
             <span>Tạm tính</span>
-            <span className='font-medium'>{getTotalCartAmount().toLocaleString('vi-VN')} ₫</span>
+            <span className='font-medium'>{getCartTotal().toLocaleString('vi-VN')} ₫</span>
           </p>
           <p className='flex justify-between text-base text-gray-700'>
             <span>Phí vận chuyển</span>
@@ -25,7 +25,7 @@ const CartTotal = () => {
           </p>
           <p className='flex justify-between text-base font-semibold text-gray-900'>
             <span>Tổng cộng</span>
-            <span className='text-blue-600'>{getTotalCartAmount().toLocaleString('vi-VN')} ₫</span>
+            <span className='text-blue-600'>{getCartTotal().toLocaleString('vi-VN')} ₫</span>
           </p>
         </div>
         <button 

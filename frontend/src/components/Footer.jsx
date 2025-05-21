@@ -22,7 +22,6 @@ const Footer = () => {
               <li><Link to='/' className='text-gray-600 hover:text-gray-900 transition-colors'>Trang Chủ</Link></li>
               <li><Link to='/collection' className='text-gray-600 hover:text-gray-900 transition-colors'>Bộ Sưu Tập</Link></li>
               <li><Link to='/about' className='text-gray-600 hover:text-gray-900 transition-colors'>Giới Thiệu</Link></li>
-              <li><Link to='/contact' className='text-gray-600 hover:text-gray-900 transition-colors'>Liên Hệ</Link></li>
             </ul>
           </div>
 
