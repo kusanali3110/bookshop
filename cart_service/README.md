@@ -80,7 +80,6 @@ Authorization: Bearer <your-jwt-token>
   Response:
   ```json
   {
-    "success": true,
     "data": {
       "items": [
         {
@@ -92,7 +91,8 @@ Authorization: Bearer <your-jwt-token>
           "imageUrl": "https://example.com/book.jpg"
         }
       ]
-    }
+    },
+    "success": true
   }
   ```
 
