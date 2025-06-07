@@ -1,8 +1,8 @@
-# BookShop Microservices Application
-
+# BookShop Microservices Application 
+(Manifest repo can be found [here](https://github.com/kusanali3110/bookshop-config))
 ## Overview
 
-BookShop is a modern e-commerce application for selling books, built using a microservices architecture. The application consists of multiple services that work together to provide a complete online book shopping experience.
+This is a modern e-commerce application for selling books, built using a microservices architecture. The application consists of multiple services that work together to provide a complete online book shopping experience.
 
 ## Architecture
 
@@ -36,7 +36,7 @@ The application is built using a microservices architecture with the following c
 
 - **Backend Services**:
   - Auth Service: Python with FastAPI
-  - Book Service: Python with FastAPI
+  - Book Service: Nodejs with Express
   - Cart Service: Go with Gin
   - API Gateway: Python with FastAPI
 
