@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Project Showcase</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <h1>Project: Application of CI/CD and GitOps in Deploying Microservices on Kubernetes</h1>
+        <p>
+            This project demonstrates the implementation of CI/CD, monitoring, and logging for a Kubernetes system on
+            Google Kubernetes Engine (GKE).
+        </p>
+        <p> Made by Nguyễn Đăng Minh Hiếu (22520438) & Dương Quốc Hưng (22520501).</p>
+    </header>
+    <main>
+        <section class="diagram">
+            <h2>System Architecture Diagram</h2>
+            <img src="./images/design.png" alt="CI/CD, Monitoring & Logging System Diagram" />
+        </section>
+        <section class="explanation">
+            <h2>Explanation of Main Components</h2>
+            <ul>
+                <li><b>Developer</b>: Develops and commits code to the Source repo.</li>
+                <li><b>CI Pipeline</b>: Automatically builds images, pushes to Dockerhub, and updates manifests.</li>
+                <li><b>ArgoCD</b>: Watches for manifest changes and automatically applies them to the GKE Cluster.</li>
+                <li><b>GKE Cluster</b>: Runs pods and collects logs via Fluentd.</li>
+                <li><b>Fluentd</b>: Collects logs and sends them to Elasticsearch.</li>
+                <li><b>Elasticsearch & Kibana</b>: Stores and visualizes logs.</li>
+                <li><b>Prometheus & Grafana</b>: Collects and visualizes metrics, sends alerts via Alertmanager.</li>
+            </ul>
+        </section>
+        <section class="workflow">
+            <h2>Workflow Steps</h2>
+            <ul>
+                <li>Developer pushes code to GitHub Source repo.</li>
+                <li>Github Actions builds and pushes Docker image, updates image tags automatically.</li>
+                <li>After merging to main branch, Github Actions updates the deployment manifest to the manifest repo.</li>
+                <li>ArgoCD watches for manifest changes and automatically applies them to the GKE Cluster.</li>
+                <li>Application runs on GKE, logs and metrics are collected by Fluentd, stored in Elasticsearch and
+                    visualized by Kibana.</li>
+                <li>Monitoring and alerting via Prometheus, Grafana, Alertmanager.</li>
+            </ul>
+        </section>
+        <section class="Screenshot">
+            <h2>Screenshots</h2>
+            <img src="./images/screenshot0.png" />
+            <p>Using Terraform to deploy GKE Cluster</p>
+            <img src="./images/screenshot1.png" />
+            <p>CI Pipeline for updating image tags and pushing to Dockerhub </p>
+            <img src="./images/screenshot2.png" />
+            <p>Github Actions for updating deployment manifest to the manifest repo</p>
+            <img src="./images/screenshot3.png" />
+            <p>ArgoCD for automatically applying deployment manifest to the GKE Cluster</p>
+            <img src="./images/screenshot4.png" />
+            <p>DNS records for the application</p>
+            <img src="./images/screenshot5.gif" />
+            <p>Deployed web application on GKE</p>
+            <img src="./images/screenshot6.png" />
+            <p>Fluentd for collecting logs and sending them to Elasticsearch, visualized by Kibana</p>
+            <img src="./images/screenshot7.png" />
+            <p>Prometheus for collecting metrics, visualized by Grafana</p>
+            <img src="./images/screenshot8.png" />
+            <p>Configuring to send alerts via email</p>
+          </section>
+        <footer>
+            <p>© 2025 - Professional Project | <a href="https://github.com/kusanali3110/bookshop" target="_blank">View source on GitHub</a></p>
+        </footer>
+    </main>
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⮝</button>
+    <script>
+        window.onscroll = function() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                document.getElementById("backToTop").style.display = "block";
+            } else {
+                document.getElementById("backToTop").style.display = "none";
+            }
+        };
+    </script>
+</body>
+
+</html>
