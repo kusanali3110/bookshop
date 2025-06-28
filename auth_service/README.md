@@ -1,5 +1,5 @@
 # Auth Service
-
+#Test
 The Auth Service is responsible for user authentication and authorization in the BookShop application. It provides endpoints for user registration, login, email verification, password reset, and profile management.
 
 ## Features
